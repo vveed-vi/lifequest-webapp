@@ -1,25 +1,36 @@
 import { useEffect, useState } from 'react'
 
 const HABITS = [
-  { key: 'бритье+умыт+зубы', label: '🧼 бритье+умыт+зубы' },
-  { key: 'английский', label: '📚 английский' },
-  { key: 'медитация', label: '🧘 медитация' },
-  { key: 'прогулка', label: '🚶 прогулка' },
-  { key: 'ужин', label: '🍽️ ужин' },
-  { key: 'гитара+чтение', label: '🎸 гитара+чтение' },
-  { key: 'зарядка', label: '🏋️ зарядка' },
-  { key: 'вода 1.5л', label: '💧 вода 1.5л' },
-  { key: 'дневник', label: '📓 дневник' },
-  { key: 'душ', label: '🚿 душ' }
+  { name: 'бритье+умыт+зубы', icon: '🛁' },
+  { name: 'английский', icon: '📚' },
+  { name: 'медитация', icon: '🧘' },
+  { name: 'прогулка', icon: '🚶' },
+  { name: 'ужин', icon: '🍽️' },
+  { name: 'гитара+чтение', icon: '🎸' },
+  { name: 'зарядка', icon: '🏋️' },
+  { name: 'вода 1.5л', icon: '💧' },
+  { name: 'дневник', icon: '📝' },
+  { name: 'душ', icon: '🧼' }
 ]
 
-function getToday() {
-  return new Date().toISOString().slice(0, 10)
+const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+
+function getWeekDates() {
+  const today = new Date()
+  const day = today.getDay()
+  const mondayOffset = day === 0 ? -6 : 1 - day
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() + mondayOffset + i)
+    return date.toISOString().slice(0, 10)
+  })
 }
 
-export default function HabitTracker() {
+function HabitTracker() {
   const [data, setData] = useState<{ [date: string]: { [habit: string]: boolean } }>({})
-  const today = getToday()
+
+  const weekDates = getWeekDates()
 
   useEffect(() => {
     const raw = localStorage.getItem('habits')
@@ -30,58 +41,50 @@ export default function HabitTracker() {
     localStorage.setItem('habits', JSON.stringify(data))
   }, [data])
 
-  const toggleHabit = (habit: string) => {
+  const toggleHabit = (date: string, habit: string) => {
     setData(prev => {
-      const todayData = prev[today] || {}
+      const dayData = prev[date] || {}
       return {
         ...prev,
-        [today]: {
-          ...todayData,
-          [habit]: !todayData[habit]
+        [date]: {
+          ...dayData,
+          [habit]: !dayData[habit]
         }
       }
     })
   }
 
-  const getStreak = (habit: string) => {
-    const dates = Object.keys(data).sort((a, b) => b.localeCompare(a))
-    let streak = 0
-    for (const date of dates) {
-      if (data[date]?.[habit]) {
-        streak++
-      } else {
-        break
-      }
-    }
-    return streak
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4">
-      <h1 className="text-3xl font-extrabold mb-6 flex items-center gap-2">
-        <span>🧩</span> <span>Привычки на сегодня</span>
-      </h1>
-      <div className="space-y-3">
-        {HABITS.map(habit => (
-          <div
-            key={habit.key}
-            className="flex justify-between items-center bg-gray-800 rounded-xl p-4 shadow"
-          >
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={data[today]?.[habit.key] || false}
-                onChange={() => toggleHabit(habit.key)}
-                className="w-5 h-5 accent-green-500"
-              />
-              <span className="text-base">{habit.label}</span>
-            </label>
-            <span className="text-lg text-orange-400 font-semibold">
-              🔥 {getStreak(habit.key)}
-            </span>
-          </div>
+      <h1 className="text-2xl font-bold mb-4">🧩 Привычки на неделю</h1>
+      <ul className="space-y-4">
+        {HABITS.map(({ name, icon }) => (
+          <li key={name}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">{icon}</span>
+              <span className="font-medium">{name}</span>
+            </div>
+            <div className="flex gap-2 pl-7">
+              {weekDates.map((date, i) => (
+                <button
+                  key={date}
+                  onClick={() => toggleHabit(date, name)}
+                  className="text-xl"
+                >
+                  {data[date]?.[name] ? '🔥' : '⚫'}
+                </button>
+              ))}
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-2 mt-6 pl-8 text-xs text-gray-400">
+        {DAYS.map(day => (
+          <span key={day} className="w-6 text-center">{day}</span>
         ))}
       </div>
     </div>
   )
 }
+
+export default HabitTracker

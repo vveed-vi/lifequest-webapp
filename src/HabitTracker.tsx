@@ -1,25 +1,24 @@
 import { useEffect, useState } from 'react'
 
 const HABITS = [
-  'бритье+умыт+зубы',
-  'английский',
-  'медитация',
-  'прогулка',
-  'ужин',
-  'гитара+чтение',
-  'зарядка',
-  'вода 1.5л',
-  'дневник',
-  'душ'
+  { key: 'бритье+умыт+зубы', label: '🧼 бритье+умыт+зубы' },
+  { key: 'английский', label: '📚 английский' },
+  { key: 'медитация', label: '🧘 медитация' },
+  { key: 'прогулка', label: '🚶 прогулка' },
+  { key: 'ужин', label: '🍽️ ужин' },
+  { key: 'гитара+чтение', label: '🎸 гитара+чтение' },
+  { key: 'зарядка', label: '🏋️ зарядка' },
+  { key: 'вода 1.5л', label: '💧 вода 1.5л' },
+  { key: 'дневник', label: '📓 дневник' },
+  { key: 'душ', label: '🚿 душ' }
 ]
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10) // "2025-05-19"
+  return new Date().toISOString().slice(0, 10)
 }
 
-function HabitTracker() {
+export default function HabitTracker() {
   const [data, setData] = useState<{ [date: string]: { [habit: string]: boolean } }>({})
-
   const today = getToday()
 
   useEffect(() => {
@@ -48,7 +47,7 @@ function HabitTracker() {
     const dates = Object.keys(data).sort((a, b) => b.localeCompare(a))
     let streak = 0
     for (const date of dates) {
-      if (data[date][habit]) {
+      if (data[date]?.[habit]) {
         streak++
       } else {
         break
@@ -59,23 +58,30 @@ function HabitTracker() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4">
-      <h1 className="text-2xl font-bold mb-4">🧩 Привычки на сегодня</h1>
-      <ul className="space-y-3">
+      <h1 className="text-3xl font-extrabold mb-6 flex items-center gap-2">
+        <span>🧩</span> <span>Привычки на сегодня</span>
+      </h1>
+      <div className="space-y-3">
         {HABITS.map(habit => (
-          <li key={habit} className="flex items-center gap-4">
-            <input
-              type="checkbox"
-              checked={data[today]?.[habit] || false}
-              onChange={() => toggleHabit(habit)}
-              className="w-5 h-5"
-            />
-            <span className="flex-1">{habit}</span>
-            <span className="text-sm text-gray-400">🔥 {getStreak(habit)}</span>
-          </li>
+          <div
+            key={habit.key}
+            className="flex justify-between items-center bg-gray-800 rounded-xl p-4 shadow"
+          >
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={data[today]?.[habit.key] || false}
+                onChange={() => toggleHabit(habit.key)}
+                className="w-5 h-5 accent-green-500"
+              />
+              <span className="text-base">{habit.label}</span>
+            </label>
+            <span className="text-lg text-orange-400 font-semibold">
+              🔥 {getStreak(habit.key)}
+            </span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   )
 }
-
-export default HabitTracker

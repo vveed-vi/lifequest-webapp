@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const HABITS = [
-  { name: 'бритье+умыт+зубы', icon: '🛁' },
+  { name: 'бритье+умыт+зубы', icon: '🧼' },
   { name: 'английский', icon: '📚' },
   { name: 'медитация', icon: '🧘' },
   { name: 'прогулка', icon: '🚶' },
@@ -10,27 +10,20 @@ const HABITS = [
   { name: 'зарядка', icon: '🏋️' },
   { name: 'вода 1.5л', icon: '💧' },
   { name: 'дневник', icon: '📝' },
-  { name: 'душ', icon: '🧼' }
+  { name: 'душ', icon: '🛁' }
 ]
 
-const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+const WEEK_DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
-function getWeekDates() {
-  const today = new Date()
-  const day = today.getDay()
-  const mondayOffset = day === 0 ? -6 : 1 - day
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today)
-    date.setDate(today.getDate() + mondayOffset + i)
-    return date.toISOString().slice(0, 10)
-  })
+function getWeekKey(index: number) {
+  const baseDate = new Date('2025-05-19')
+  const day = new Date(baseDate)
+  day.setDate(baseDate.getDate() + index)
+  return day.toISOString().slice(0, 10)
 }
 
 function HabitTracker() {
   const [data, setData] = useState<{ [date: string]: { [habit: string]: boolean } }>({})
-
-  const weekDates = getWeekDates()
 
   useEffect(() => {
     const raw = localStorage.getItem('habits')
@@ -41,7 +34,7 @@ function HabitTracker() {
     localStorage.setItem('habits', JSON.stringify(data))
   }, [data])
 
-  const toggleHabit = (date: string, habit: string) => {
+  const toggleHabit = (habit: string, date: string) => {
     setData(prev => {
       const dayData = prev[date] || {}
       return {
@@ -56,31 +49,31 @@ function HabitTracker() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4">
-      <h1 className="text-2xl font-bold mb-4">🧩 Привычки на неделю</h1>
-      <ul className="space-y-4">
-        {HABITS.map(({ name, icon }) => (
-          <li key={name}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xl">{icon}</span>
-              <span className="font-medium">{name}</span>
-            </div>
-            <div className="flex gap-2 pl-7">
-              {weekDates.map((date, i) => (
-                <button
-                  key={date}
-                  onClick={() => toggleHabit(date, name)}
-                  className="text-xl"
-                >
-                  {data[date]?.[name] ? '🔥' : '⚫'}
-                </button>
-              ))}
-            </div>
-          </li>
+      <h1 className="text-3xl font-bold mb-6">🧩 Привычки на неделю</h1>
+      <div className="grid grid-cols-[auto_repeat(7,_minmax(0,_1fr))] gap-4 text-center items-center">
+        <div></div>
+        {WEEK_DAYS.map((d, i) => (
+          <div key={i} className="font-semibold text-sm text-gray-300">{d}</div>
         ))}
-      </ul>
-      <div className="flex gap-2 mt-6 pl-8 text-xs text-gray-400">
-        {DAYS.map(day => (
-          <span key={day} className="w-6 text-center">{day}</span>
+
+        {HABITS.map(habit => (
+          <>
+            <div key={habit.name} className="flex items-center gap-2 justify-start">
+              <span>{habit.icon}</span>
+              <span>{habit.name}</span>
+            </div>
+            {WEEK_DAYS.map((_, i) => {
+              const dateKey = getWeekKey(i)
+              const done = data[dateKey]?.[habit.name] || false
+              return (
+                <div
+                  key={dateKey + habit.name}
+                  onClick={() => toggleHabit(habit.name, dateKey)}
+                  className={`cursor-pointer w-6 h-6 rounded-full mx-auto border border-gray-500 flex items-center justify-center ${done ? 'bg-orange-500' : 'bg-gray-700'}`}
+                ></div>
+              )
+            })}
+          </>
         ))}
       </div>
     </div>

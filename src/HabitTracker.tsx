@@ -1,85 +1,97 @@
+// src/HabitTracker.tsx
 import { useEffect, useState } from 'react'
 
 const HABITS = [
-  ['🪥', 'бритье+умыт+зубы'],
-  ['📚', 'английский'],
-  ['🧘', 'медитация'],
-  ['🚶', 'прогулка'],
-  ['🍽️', 'ужин'],
-  ['🎸', 'гитара+чтение'],
-  ['🏋️', 'зарядка'],
-  ['💧', 'вода 1.5л'],
-  ['📓', 'дневник'],
-  ['🧼', 'душ'],
+  { icon: '🧼', name: 'бритье+умыт+зубы' },
+  { icon: '📚', name: 'английский' },
+  { icon: '🧘', name: 'медитация' },
+  { icon: '🧍', name: 'прогулка' },
+  { icon: '🍽', name: 'ужин' },
+  { icon: '🎸', name: 'гитара+чтение' },
+  { icon: '🏋', name: 'зарядка' },
+  { icon: '💧', name: 'вода 1.5л' },
+  { icon: '📜', name: 'дневник' },
+  { icon: '🧻', name: 'душ' },
 ]
 
-const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
-function getWeekKey() {
-  const d = new Date()
-  const monday = new Date(d.setDate(d.getDate() - ((d.getDay() + 6) % 7)))
-  return monday.toISOString().slice(0, 10)
+function getCurrentWeekDates() {
+  const today = new Date()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  return DAYS.map((_, i) => {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + i)
+    return date.toISOString().slice(0, 10)
+  })
 }
 
 function HabitTracker() {
-  const [data, setData] = useState<{ [week: string]: { [habit: string]: boolean[] } }>({})
-  const weekKey = getWeekKey()
-  const today = new Date().getDay() || 7 // 1=Пн, 7=Вс
+  const [data, setData] = useState<{ [date: string]: { [habit: string]: boolean } }>({})
+  const weekDates = getCurrentWeekDates()
+  const todayStr = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
-    const raw = localStorage.getItem('habit_week_data')
+    const raw = localStorage.getItem('habits')
     if (raw) setData(JSON.parse(raw))
   }, [])
 
   useEffect(() => {
-    localStorage.setItem('habit_week_data', JSON.stringify(data))
+    localStorage.setItem('habits', JSON.stringify(data))
   }, [data])
 
-  const toggle = (habit: string, dayIdx: number) => {
+  const toggleHabit = (habit: string, date: string) => {
     setData(prev => {
-      const week = prev[weekKey] || {}
-      const days = week[habit] || Array(7).fill(false)
-      days[dayIdx] = !days[dayIdx]
+      const dayData = prev[date] || {}
       return {
         ...prev,
-        [weekKey]: {
-          ...week,
-          [habit]: days
+        [date]: {
+          ...dayData,
+          [habit]: !dayData[habit]
         }
       }
     })
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4 flex justify-center items-start">
-      <div className="w-full max-w-3xl">
-        <h1 className="text-3xl font-bold mb-6">🧩 Привычки на неделю</h1>
-        <div className="grid grid-cols-[auto_repeat(7,minmax(2rem,1fr))] gap-3">
-          <div></div>
-          {WEEKDAYS.map(day => (
-            <div key={day} className="text-center font-bold">{day}</div>
-          ))}
-          {HABITS.map(([icon, name]) => (
-            <>
-              <div key={name} className="flex items-center gap-2 whitespace-nowrap">{icon} {name}</div>
-              {WEEKDAYS.map((_, i) => {
-                const checked = data?.[weekKey]?.[name]?.[i] ?? false
-                const todayIdx = today - 1
-                const isToday = i === todayIdx
-                return (
-                  <button
-                    key={i}
-                    onClick={() => toggle(name, i)}
-                    className={`rounded-full w-6 h-6 flex items-center justify-center transition ${
-                      checked ? 'bg-orange-500' : 'bg-gray-800'
-                    } ${isToday ? 'ring-2 ring-yellow-400' : ''}`}
-                  >
-                    {checked ? '🔥' : ''}
-                  </button>
-                )
-              })}
-            </>
-          ))}
+    <div className="min-h-screen bg-gray-950 text-white py-10 px-4 flex justify-center">
+      <div className="w-full max-w-5xl">
+        <h1 className="text-3xl font-extrabold mb-8 flex items-center gap-4">
+          <img src="/favicon.ico" className="w-8 h-8" />
+          Привычки на неделю
+        </h1>
+        <div className="overflow-x-auto">
+          <table className="w-full text-center border-separate border-spacing-y-2">
+            <thead>
+              <tr>
+                <th className="text-left px-2"> </th>
+                {DAYS.map((day, idx) => (
+                  <th key={day} className={`text-sm font-semibold px-2 ${weekDates[idx] === todayStr ? 'text-yellow-400' : 'text-gray-400'}`}>{day}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {HABITS.map(habit => (
+                <tr key={habit.name} className="text-left">
+                  <td className="whitespace-nowrap font-medium flex items-center gap-2 px-2">
+                    <span className="text-xl">{habit.icon}</span>
+                    <span>{habit.name}</span>
+                  </td>
+                  {weekDates.map(date => (
+                    <td key={date}>
+                      <button
+                        onClick={() => toggleHabit(habit.name, date)}
+                        className={`w-8 h-8 rounded-full transition-transform duration-150 flex items-center justify-center ${data[date]?.[habit.name] ? 'bg-orange-500' : 'bg-gray-800'} hover:scale-110`}
+                      >
+                        {data[date]?.[habit.name] ? '🔥' : ''}
+                      </button>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

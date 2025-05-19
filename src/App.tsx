@@ -39,3 +39,4 @@ function App() {
 }
 
 export default App
+<h1 className="text-2xl font-bold mb-2">🔥 Я реально обновил страницу!</h1>

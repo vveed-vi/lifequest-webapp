@@ -9,7 +9,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 p-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold mb-2">💡 Мой день</h1>
+        <h1 className="text-2xl font-bold mb-2">💡 Мой хуй</h1>
         <p className="text-sm text-gray-600 mb-6">
           Прогресс за сегодня
         </p>
@@ -39,4 +39,4 @@ function App() {
 }
 
 export default App
-<h1 className="text-2xl font-bold mb-2">🔥 Я реально обновил страницу!</h1>
+
